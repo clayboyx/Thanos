@@ -1,1 +1,441 @@
+version: "3.4"  # this must match the version in docker-compose.yml
+services:
+  sonarr:
+    image: hotio/sonarr:nightly #linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/sonarr:/config
+      - ${DOCKERDOWNLOADDIR}:/downloads
+      - ${DOCKERSTORAGEDIR}/anime:/anime
+      - ${DOCKERSTORAGEDIR}/pools/tvshows:/tvshows
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  docker_proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker_proxy
+    hostname: ${DOCKERHOSTNAME}
+    ports:
+      - 2375:2375
+    environment:
+      - CONTAINERS=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+
+  sabnzbd:
+    volumes:
+      - ${DOCKERSTORAGEDIR}:/storage
+      - ${DOCKERDOWNLOADDIR}:/downloads
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    volumes:
+      - ${DOCKERCONFDIR}/jellyfin:/config
+      - ${DOCKERSTORAGEDIR}:/storage
+    ports:
+      - 8096:8096
+      - 8920:8920 #optional
+      - 7359:7359/udp #optional
+      - 1901:1900/udp #optional
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+      - GIDLIST=44
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility,video
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities:
+              - gpu
+    restart: unless-stopped
+
+  wizarr:
+    container_name: wizarr
+    image: ghcr.io/wizarrrr/wizarr:latest
+    ports:
+      - 5690:5690
+    volumes:
+      - ${DOCKERCONFDIR}/wizarr/database:/data/database
+
+  pingvin-share:
+    image: stonith404/pingvin-share
+    container_name: pingvin-share
+    restart: unless-stopped
+    ports:
+      - 3030:3000
+    volumes:
+      - ${DOCKERCONFDIR}/pingvin-share/data:/opt/app/backend/data"
+      - ${DOCKERCONFDIR}/pingvin-share/images:/opt/app/frontend/public/img"
+
+  jellystat-db:
+    image: postgres:15.2
+    container_name: jellystat-db
+    environment:
+      POSTGRES_DB: jfstat
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ${DOCKERCONFDIR}/jellystat:/var/lib/postgresql/data # Mounting the volume
+  jellystat:
+    image: cyfershepard/jellystat:latest
+    container_name: jellystat
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_IP: jellystat-db
+      POSTGRES_PORT: 5432
+      JWT_SECRET: 'bOHvvD4YfRttWfSemy23tbLy6p8KkTpX'
+    ports:
+      - 3040:3000 #Server Port
+    volumes:
+      - ${DOCKERCONFDIR}/jellystat:/app/backend/backup-data # Mounting the volume
+
+    depends_on:
+      - jellystat-db
+
+  dokemon:
+    image: productiveops/dokemon:latest
+    ports:
+      - "9090:9090"
+    container_name: dokemon
+    restart: unless-stopped
+    volumes:
+      - ${DOCKERCONFDIR}/dokemon:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  bliss:
+    image: cooperised/bliss:latest
+    ports:
+      - "3220:3220"
+      - "3221:3221"
+    container_name: bliss
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/bliss:/config
+      - ${DOCKERSTORAGEDIR}:/storage
+
+  komga:
+    image: gotson/komga:latest
+    container_name: komga
+    volumes:
+      - ${DOCKERSTORAGEDIR}/archive/Manga:/data
+      - ${DOCKERCONFDIR}/komga:/config
+    ports:
+      - "8060:25600"
+    user: "1000:1000"
+    environment:
+      - TZ=${TZ}
+    restart: unless-stopped
+
+  filezilla:
+    image: jlesage/filezilla
+    ports:
+      - "5800:5800"
+      - "5900:5900"
+    container_name: filezilla
+    restart: unless-stopped
+    environment:
+      - DISPLAY_HEIGHT=1440
+      - DISPLAY_WIDTH=2560
+    volumes:
+      - ${DOCKERCONFDIR}/filezilla:/config:rw
+      - ${DOCKERSTORAGEDIR}:/storage
+
+  readarr:
+    image: linuxserver/readarr:develop
+    ports:
+    - "8787:8787"
+    container_name: readarr
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/readarr:/config:rw
+      - ${DOCKERSTORAGEDIR}/archive/Books:/ebook
+      - ${DOCKERDOWNLOADDIR}:/downloads
+
+  readarra:
+    image: linuxserver/readarr:develop
+    ports:
+    - "8788:8787"
+    container_name: readarra
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/readarra:/config:rw
+      - ${DOCKERSTORAGEDIR}/archive/Books:/audiobooks
+      - ${DOCKERDOWNLOADDIR}:/downloads
+
+  deluge:
+    image: sinaptika/deluge
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    volumes:
+      - ${DOCKERCONFDIR}/lidarr:/config
+      - ${DOCKERCONFDIR}/lidarr/config:/custom-services.d
+      - ${DOCKERCONFDIR}/lidarr/config:/custom-cont-init.d
+      - ${DOCKERSTORAGEDIR}/software/downloads-lidarr-extended:/downloads-lidarr-extended
+      - ${DOCKERSTORAGEDIR}/software/music-videos:/music-videos
+      - ${DOCKERMUSICDIR}:/music
+      - ${DOCKERDOWNLOADDIR}:/downloads
+    environment:
+      - TZ=America/Chicago
+      - PUID=1000
+      - PGID=1000
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+
+  portainer:
+    image: portainer/portainer-ce
+
+  syncthing:
+    image: linuxserver/syncthing
+    container_name: syncthing
+    hostname: Thanos
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/syncthing:/config
+      - ${DOCKERSTORAGEDIR}:/storage
+    ports:
+      - 8384:8384
+      - 22000:22000
+      - 21027:21027/udp
+    restart: unless-stopped
+
+  prowlarr:
+    image: ghcr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  whisparr:
+    image: hotio/whisparr:nightly
+    container_name: whisparr
+    ports:
+      - "6969:6969"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/whisparr:/config
+      - ${DOCKERSTORAGEDIR}/xxx/complete:/xxx
+      - ${DOCKERDOWNLOADDIR}:/downloads
+    restart: unless-stopped
+
+  autobrr:
+    container_name: autobrr
+    image: ghcr.io/autobrr/autobrr:latest
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - PGID=${GUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/autobrr/config:/config
+    ports:
+      - 7474:7474
+
+  radarr:
+    image: cr.hotio.dev/hotio/radarr
+    ports:
+      - "7878:7878"
+    container_name: radarr
+    restart: unless-stopped
+    environment:
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERCONFDIR}/radarr:/config
+      - ${DOCKERDOWNLOADDIR}:/downloads
+      - ${DOCKERSTORAGEDIR}/pools/4kmovies:/4k movies
+
+  scrutiny:
+    container_name: scrutiny
+    image: ghcr.io/analogj/scrutiny:master-omnibus
+    cap_add:
+      - SYS_RAWIO
+      - SYS_ADMIN
+    ports:
+      - "8383:8080" # webapp
+      - "8086:8086" # influxDB admin
+    volumes:
+      - /run/udev:/run/udev:ro
+      - ${DOCKERCONFDIR}/scrutiny:/opt/scrutiny/config
+      - ./influxdb2:/opt/scrutiny/influxdb
+    devices:
+      - "/dev/nvme0" # OS
+      - "/dev/nvme2" # software
+      - "/dev/nvme1" # archive
+      - "/dev/sda"
+      - "/dev/sdb"
+      - "/dev/sdc"
+      - "/dev/sdd"
+      - "/dev/sde"
+      - "/dev/sdf"
+      - "/dev/sdg"
+      - "/dev/sdh"
+      - "/dev/sdi"
+      - "/dev/sdj"
+      - "/dev/sdk"
+      - "/dev/sdl"
+      - "/dev/sdo"
+      - "/dev/sdp"
+      - "/dev/sdq"
+      - "/dev/sdr"
+      - "/dev/sds"
+      - "/dev/sdt"
+      - "/dev/sdu"
+      - "/dev/sdv"
+      - "/dev/sdw"
+      - "/dev/sdx"
+      - "/dev/sdy"
+    restart: unless-stopped
+
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    environment:
+      - AUDIOBOOKSHELF_UID=99
+      - AUDIOBOOKSHELF_GID=100
+    ports:
+      - 13378:80
+    volumes:
+      - ${DOCKERSTORAGEDIR}:/storage
+      - ${DOCKERCONFDIR}/audiobookshelf:/config
+      - ${DOCKERCONFDIR}/audiobookshelf/metadata:/metadata
+    restart: unless-stopped
+
+  filebrowser:
+    image: filebrowser/filebrowser
+    container_name: filebrowser
+    ports:
+      - 8008:80
+    volumes:
+      - /:/srv
+      - ${DOCKERCONFDIR}/filebrowser/filebrowser.db:/database.db
+      - ${DOCKERCONFDIR}/filebrowser/filebrowser.json:/filebrower.json
+    restart: always
+
+  kaizoku:
+    container_name: kaizoku
+    image: ghcr.io/oae/kaizoku:latest
+    environment:
+      - DATABASE_URL=postgresql://kaizoku:kaizoku@kaizoku_db:5432/kaizoku
+      - KAIZOKU_PORT=3000
+      - REDIS_HOST=kaizoku_redis
+      - REDIS_PORT=6379
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - TZ=${TZ}
+    volumes:
+      - ${DOCKERSTORAGEDIR}/archive/Manga:/data
+      - ${DOCKERCONFDIR}/kiazoku:/config
+      - ${DOCKERCONFDIR}/kiazoku/logs:/logs
+    depends_on:
+      kaizoku_db:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+  kaizoku_redis:
+    image: redis:7-alpine
+    container_name: kaizoku_redis
+    volumes:
+      - redis:/data
+  kaizoku_db:
+    container_name: kaizoku_db
+    image: postgres:15
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kaizoku']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      - POSTGRES_USER=kaizoku
+      - POSTGRES_DB=kaizoku
+      - POSTGRES_PASSWORD=kaizoku
+    volumes:
+      - db:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  immich:
+    image: ghcr.io/imagegenius/immich:latest
+    container_name: immich
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DB_HOSTNAME=immich_postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=immich_redis
+      - DISABLE_MACHINE_LEARNING=false #optional
+      - DISABLE_TYPESENSE=false #optional
+      - DB_PORT=5432 #optional
+      - REDIS_PORT=6379 #optional
+      - REDIS_PASSWORD= #optional
+      - MACHINE_LEARNING_WORKERS=1 #optional
+      - MACHINE_LEARNING_WORKER_TIMEOUT=120 #optional
+    volumes:
+      - ${DOCKERCONFDIR}/immich:/config
+      - ${DOCKERSTORAGEDIR}/photos/immich/:/photos
+#      - path_to_machine-learning:/config/machine-learning #optional
+#      - path_to_imports:/import:ro #optional
+    ports:
+      - 8070:8080
+    restart: unless-stopped
+# This container requires an external application to be run separately to be run separately.
+# Redis:
+  immich_redis:
+    image: redis
+    ports:
+      - 6379:6379
+    container_name: immich_redis
+## PostgreSQL 14:
+  immich_postgres:
+    image: tensorchord/pgvecto-rs:pg14-v0.1.11
+    ports:
+      - 5433:5432
+    container_name: immich_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: immich
+    volumes:
+      - ${DOCKERCONFDIR}/immich/postgres:/var/lib/postgresql/data
 
