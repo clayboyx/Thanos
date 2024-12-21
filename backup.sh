@@ -28,7 +28,7 @@ function send_notification {
 start_time=$SECONDS
 
 # Define source and destination paths
-SOURCE_DIR="/home/clayboy/.config/appdata/"
+SOURCE_DIR="/opt/docker/"
 DESTINATION_DIR="/mnt/archive/docker_backup"
 BACKUP_NAME="docker-$(date +"%m_%d_%Y")"
 
