@@ -90,7 +90,7 @@ function main(){
   MANAGE_SERVICES=1
 
   # Containers to manage (separated with spaces).
-  SERVICES='sonarr lidarr-extended radarr whisparr bliss'
+  SERVICES='sonarr lidarr radarr whisparr readarr readarra bliss'
 
   # Build Services Array...
   service_array_setup
