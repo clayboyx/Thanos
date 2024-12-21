@@ -1,0 +1,76 @@
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/nvme0n1p2 during installation
+UUID=e5220276-e2e4-41d4-9c69-9bc43b79ccf1 /               ext4    errors=remount-ro 0       1
+# /boot/efi was on /dev/nvme0n1p1 during installation
+UUID=A75A-7ECB  /boot/efi       vfat    umask=0077      0       1
+/swapfile                                 none            swap    sw              0       0
+
+
+# Parity-Snapraid
+
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR56T1NE /mnt/parity/parity_1 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Parity_1 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR57CDGP /mnt/parity/parity_2 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Parity_2 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR578ER8 /mnt/parity/parity_3 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Parity_3 0 0
+
+# 4k-Drives
+
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR57CL3Q /mnt/4k/drive_1 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_1 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR577Z75 /mnt/4k/drive_2 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_2 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR57CLGA /mnt/4k/drive_3 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_3 0 0
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11B2DA0_2NH5TTWH-part1 /mnt/4k/drive_4 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_4 0 0
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11B2DA0_5DJ6VJSJ-part1 /mnt/4k/drive_5 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_5 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR56LJET /mnt/4k/drive_6 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_6 0 0
+
+# HD-Drives
+
+
+# TV-Drives
+
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR576T17 /mnt/tv/drive_1 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=TV_Drive_1 0 0
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11B2DA0_4BHE89PH-part1 /mnt/tv/drive_2 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=TV_Drive_2 0 0
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11B2DA0_2MG4W6YN-part1 /mnt/tv/drive_3 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=TV_Drive_3 0 0
+
+## MergerFS-Storage-Pools ##
+
+# TV Shows Pool
+/mnt/tv/drive* /mnt/pools/tvshows fuse.mergerfs defaults,nonempty,allow_other,cache.files=off,use_ino,category.create=epmfs,moveonenospc=true,minfreespace=500G,fsname=mfs_TV_pool
+# 4K Movies Pool
+/mnt/4k/drive* /mnt/pools/4kmovies fuse.mergerfs defaults,nonempty,allow_other,cache.files=off,use_ino,category.create=epmfs,moveonenospc=true,minfreespace=500G,fsname=mfs_4K_pool
+# HD Movies Pool
+#/mnt/hd/drive* /mnt/pools/hdmovies fuse.mergerfs defaults,nonempty,allow_other,cache.files=off,use_ino,category.create=epmfs,moveonenospc=true,minfreespace=500G,fsname=mfs_HD_pool
+
+## Single Drives ##
+
+# Software Drive
+/dev/disk/by-id/nvme-PCIe_SSD_22070720000283 /mnt/software auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=software 0 0
+# Music Drive
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11BLDS0_8LG1DT8A-part1 /mnt/music auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Music 0 0
+# Cloud Drive
+/dev/disk/by-id/ata-WDC_WD80EFAX-68LHPN0_7SGKGG1C-part1 /mnt/nextcloud auto nosuid,nodev,nofail,x-gvfs-show 0 0
+# Archive Drive
+/dev/disk/by-id/nvme-PCIe_SSD_20080510240271 /mnt/archive auto nosuid,nodev,nofail,x-gvfs-show 0 0
+# Transcode Drive
+/dev/disk/by-id/ata-Samsung_SSD_860_EVO_500GB_S3Z1NY0M402809D-part1 /mnt/transcode auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=transcode 0 0
+# xXx Drive
+/dev/disk/by-id/ata-WDC_WD80EZAZ-11TDBA0_7SJ2S4WW-part1 /mnt/xxx auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=xxx 0 0
+# Photos Drive
+/dev/disk/by-id/ata-WDC_WD80EZZX-11CSGA0_VK0TVTWY-part1 /mnt/photos auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Photos 0 0
+# Anime Drive
+/dev/disk/by-id/ata-WDC_WD80EZZX-11CSGA0_VK0G185Y-part1 /mnt/data/Anime auto nosuid,nodev,nofail,x-gvfs-show 0 0
+
+## Other Drive ##
+
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR56X7KA /mnt/anime auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=Anime 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR56JKSV /mnt/4k/drive_7 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_7 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR59GA8N /mnt/4k/drive_8 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_8 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR57D9YP /mnt/4k/drive_9 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_9 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR575JN5 /mnt/4k/drive_10 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_10 0 0
+/dev/disk/by-id/ata-WDC_WD180EDGZ-11B2DA0_4BHJVMNH-part1 /mnt/4k/drive_11 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_11 0 0
+/dev/disk/by-id/ata-ST18000NM000J-2TV103_ZR5DAXZ0 /mnt/4k/drive_12 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_12 0 0
+/dev/disk/by-id/ata-WDC_WD80EZAZ-11TDBA0_7PHKRWZC-part1 /mnt/4k/drive_13 auto nosuid,nodev,nofail,x-gvfs-show,x-gvfs-name=4K_Drive_13 0 0
